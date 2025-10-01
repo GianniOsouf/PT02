@@ -7,12 +7,6 @@ ser = serial.Serial('COM3', 9600)  # adapte le port à ton système
 class Interface:
     def __init__(self, root):
 
-        with open("version.txt", "r") as f:
-            version = f.read().strip()
-
-        self.version_label = tk.Label(root, text=f"Version : {version}")
-        self.version_label.pack()
-
         self.root = root
         self.root.title("PT02")
 
@@ -42,9 +36,16 @@ class Interface:
         self.status_label = tk.Label(root, text="Statut : Attente")
         self.status_label.pack()
 
-        # Direction emoji
-        self.direction_label = tk.Label(root, text="↕", font=("Arial", 40))
-        self.direction_label.pack()
+        # Barre led
+        self.jauge_frame = tk.Frame(root)
+        self.jauge_frame.pack(pady=10)
+
+        self.jauge_labels = []
+        for i in range(9):
+            lbl = tk.Label(self.jauge_frame, width=2, height=1, bg="lightgray", relief="ridge")
+            lbl.grid(row=0, column=i, padx=2)
+            self.jauge_labels.append(lbl)
+
 
         # Boutons manuels
         self.manual_frame = tk.Frame(root)
@@ -66,6 +67,12 @@ class Interface:
         self.root.bind("<ButtonRelease>", self.stop_manual)
 
         threading.Thread(target=self.lire_serial, daemon=True).start()
+
+        with open("version.txt", "r") as f:
+            version = f.read().strip()
+
+        self.version_label = tk.Label(root, text=f"Version : {version}", fg="gray")
+        self.version_label.pack()
 
     def toggle_mode(self):
         if self.mode_auto.get():
@@ -128,11 +135,28 @@ class Interface:
         ser.write(f"{position}\n".encode())
 
         if position < 90:
-            self.direction_label.config(text="⬅")
+            self.update_jauge()
         elif position > 90:
-            self.direction_label.config(text="➡")
+            self.update_jauge()
         else:
-            self.direction_label.config(text="↕")
+            self.update_jauge()
+
+    def update_jauge(self):
+        for lbl in self.jauge_labels:
+            lbl.config(bg="lightgray")
+
+        if not self.engage:
+            return
+
+        position = self.calculer_position_servo()
+        index = 4  # centre
+
+        if position < 90:
+            index = max(0, 4 - int((90 - position) / 10))
+        elif position > 90:
+            index = min(8, 4 + int((position - 90) / 10))
+        self.jauge_labels[index].config(bg="green")
+
 
     def start_gauche(self):
         self.engage = False
