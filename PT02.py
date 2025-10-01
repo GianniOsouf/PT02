@@ -105,10 +105,12 @@ class Interface:
             self.engager_btn.config(state=tk.NORMAL)
             if self.engage:
                 self.piloter_servo()
+                self.update_jauge()
         else:
             self.engager_btn.config(state=tk.DISABLED)
             if self.engage:
                 self.engage = False
+                self.update_jauge()
                 self.engager_btn.config(text="Engager")
                 self.status_label.config(text="Erreur, reprenez le contrôle manuel")
 
@@ -117,10 +119,12 @@ class Interface:
         if self.engage:
             self.status_label.config(text="Statut : Engagé")
             self.engager_btn.config(text="Désengager")
+            self.update_jauge()
             self.piloter_servo()
         else:
             self.status_label.config(text="Statut : Désengagé")
             self.engager_btn.config(text="Engager")
+            self.update_jauge()
 
     def calculer_position_servo(self):
         try:
@@ -160,6 +164,7 @@ class Interface:
 
     def start_gauche(self):
         self.engage = False
+        self.update_jauge()
         self.manual_active = True
         self.status_label.config(text="Désengagé (manuel gauche)")
         self.manual_angle = max(0, self.manual_angle - 5)
@@ -168,6 +173,7 @@ class Interface:
 
     def start_droite(self):
         self.engage = False
+        self.update_jauge()
         self.manual_active = True
         self.status_label.config(text="Désengagé (manuel droite)")
         self.manual_angle = min(180, self.manual_angle + 5)
@@ -211,11 +217,7 @@ class Interface:
         self.manual_angle = max(0, min(180, self.manual_angle + step))
         ser.write(f"{self.manual_angle}\n".encode())
         self.root.after(200, lambda: self.move_servo_continuous(step))
-
-
-root = tk.Tk()
-app = Interface(root)
-root.mainloop()
+        
 if __name__ == "__main__":
     root = tk.Tk()
     app = Interface(root)
