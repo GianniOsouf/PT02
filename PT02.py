@@ -6,6 +6,13 @@ ser = serial.Serial('COM3', 9600)  # adapte le port à ton système
 
 class Interface:
     def __init__(self, root):
+
+        with open("version.txt", "r") as f:
+            version = f.read().strip()
+
+        self.version_label = tk.Label(root, text=f"Version : {version}")
+        self.version_label.pack()
+
         self.root = root
         self.root.title("PT02")
 
