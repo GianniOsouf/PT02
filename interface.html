@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="viewport" content="width=device-width">
+  <title>PT-02 Interface</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f0f0f0; margin: 0; padding: 20px; }
+    h2 { color: #333; }
+    button, input[type=number] {
+      margin: 5px; padding: 10px; font-size: 16px;
+    }
+    .jauge { margin-top: 20px; }
+    .jaugeBox {
+      display: inline-block; width: 25px; height: 25px; margin: 3px;
+      border-radius: 4px; background: #ccc; transition: background 0.3s;
+    }
+    .active { background: #4CAF50; }
+    #error { color: red; font-weight: bold; margin-top: 20px; display: none; }
+  </style>
+</head>
+<body>
+  <h2>PT-02</h2>
+  <div id="error">Aucun système détecté</div>
+  <div id="interface">
+    <p>Distance G: <span id="distG">--</span> cm | D: <span id="distD">--</span> cm</p>
+    <div id="buttonContainer"></div>
+    <p><input type="number" id="ecart" value="20" onchange="send('/ecart=' + this.value)"> cm (écart)</p>
+    <div class="jauge" id="jauge"></div>
+  </div>
+
+  <script>
+    const ip = "192.168.4.1";
+
+    function send(cmd) {
+      fetch(`http://${ip}${cmd}`).catch(() => showError());
+    }
+
+    function update() {
+      fetch(`http://${ip}/`)
+        .then(r => r.text())
+        .then(html => {
+          document.getElementById("error").style.display = "none";
+          parseArduinoHTML(html);
+        })
+        .catch(() => showError());
+    }
+
+    function showError() {
+      document.getElementById("error").style.display = "block";
+      document.getElementById("distG").textContent = "--";
+      document.getElementById("distD").textContent = "--";
+      document.getElementById("jauge").innerHTML = "";
+      document.getElementById("buttonContainer").innerHTML = "";
+    }
+
+    function parseArduinoHTML(html) {
+      const distG = html.match(/Distance G: (\d+)/)?.[1] || "--";
+      const distD = html.match(/D: (\d+)/)?.[1] || "--";
+      const engaged = html.includes("Engagé");
+      const manuel = html.includes("Manuel");
+      const indexMatch = html.match(/jaugeBox active/g);
+      const index = indexMatch ? indexMatch.length - 1 : -1;
+
+      document.getElementById("distG").textContent = distG;
+      document.getElementById("distD").textContent = distD;
+
+      let boutonTexte = engaged ? "Désengager" : "Engager";
+      let boutonCouleur = engaged ? "green" : "red";
+      if (manuel) {
+        boutonTexte = "Manuel";
+        boutonCouleur = "blue";
+      }
+
+      document.getElementById("buttonContainer").innerHTML =
+        `<button style="background:${boutonCouleur};color:white;padding:10px 20px;font-size:16px;border:none;border-radius:5px;" onclick="send('/engage=${engaged ? 0 : 1}')">${boutonTexte}</button>`;
+
+      let jaugeHTML = "";
+      for (let i = 0; i < 9; i++) {
+        jaugeHTML += `<div class="jaugeBox${i === index ? ' active' : ''}"></div>`;
+      }
+      document.getElementById("jauge").innerHTML = jaugeHTML;
+    }
+
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
