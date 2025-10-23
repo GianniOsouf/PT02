@@ -51,11 +51,11 @@ class Interface:
         self.manual_frame = tk.Frame(root)
         self.manual_frame.pack()
 
-        self.btn_gauche = tk.Button(self.manual_frame, text="⬅ Gauche", width=10)
-        self.btn_gauche.grid(row=0, column=0, padx=5)
+        self.btn_gauche = tk.Button(self.manual_frame, text="Droite ➡", width=10)
+        self.btn_gauche.grid(row=0, column=1, padx=5)
 
-        self.btn_droite = tk.Button(self.manual_frame, text="Droite ➡", width=10)
-        self.btn_droite.grid(row=0, column=1, padx=5)
+        self.btn_droite = tk.Button(self.manual_frame, text="⬅ Gauche", width=10)
+        self.btn_droite.grid(row=0, column=0, padx=5)
 
         self.btn_gauche.bind("<ButtonPress>", self.hold_gauche)
         self.btn_gauche.bind("<ButtonRelease>", self.stop_manual)
@@ -159,7 +159,7 @@ class Interface:
             index = max(0, 4 - int((90 - position) / 10))
         elif position > 90:
             index = min(8, 4 + int((position - 90) / 10))
-        self.jauge_labels[index].config(bg="green")
+        self.jauge_labels[8-index].config(bg="green")
 
 
     def start_gauche(self):
